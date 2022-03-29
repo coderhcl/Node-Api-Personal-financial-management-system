@@ -15,7 +15,7 @@ const schema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  roleId: { type: 'Number' },
+  roleId: { type: 'Number', default: 2 },
 })
 
 module.exports = mongoose.model('Users', schema)

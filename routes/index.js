@@ -67,11 +67,15 @@ module.exports = (app) => {
       },
       app.get('secret')
     )
+    // console.log(user.name)
+    // console.log(user.roleId)
+
     res.send({
       code: 1,
       data: {
         _id: user._id,
         name: user.name,
+        roleId: user.roleId,
         token: token,
         message: '登录成功',
       },
@@ -121,19 +125,16 @@ module.exports = (app) => {
   })
   // 忘记密码
   router.get('/forget', async (req, res) => {
-    console.log(req.query.name)
-    const name = await Users.findOne({ name: req.query.name })
-    if (!name) {
+    const result = await Users.findOne({ name: req.query.name })
+    if (result === null) {
       return res.send({
-        name: name,
         code: -1,
         data: {
           message: '账号不存在',
         },
       })
     }
-    const phone = await Users.findOne({ phone: req.query.phone })
-    if (!phone) {
+    if (req.query.phone != result.phone) {
       return res.send({
         code: -1,
         data: {
@@ -141,8 +142,7 @@ module.exports = (app) => {
         },
       })
     }
-    const email = await Users.findOne({ email: req.query.email })
-    if (!email) {
+    if (req.query.email != result.email) {
       return res.send({
         code: -1,
         data: {
@@ -153,10 +153,39 @@ module.exports = (app) => {
     res.send({
       code: 1,
       data: {
+        id: result._id,
         message: '请输入新密码',
       },
     })
   })
+
+  // 修改密码到后端
+  router.patch('/patchpasswords', async (req, res) => {
+    const password = desEncrypt(req.body.password, KEY)
+    const id = req.body.id
+    const result = Users.findOneAndUpdate(
+      { _id: id },
+      { $set: { password: password } },
+      { new: true }
+    )
+      .then((result) => {
+        res.send({
+          code: 1,
+          data: {
+            message: '密码修改成功，请重新登录',
+          },
+        })
+      })
+      .catch((err) => {
+        res.send({
+          code: -1,
+          data: {
+            message: '更改失败',
+          },
+        })
+      })
+  })
+
   // 获取单个用户信息
   router.get('/user/:id', authMeddleware, async (req, res) => {
     const user = await Users.findById(req.params.id)
@@ -164,17 +193,31 @@ module.exports = (app) => {
       code: 1,
       data: {
         _id: user._id,
-        // name: user.name,
-        // token: token,
+        name: user.name,
         message: '登录成功',
       },
     })
   })
 
-  // 获取菜单
-  router.get('/menu1', async (req, res) => {
+  // 获取管理员菜单
+  router.get('/adminmenu', async (req, res) => {
     const Admin = await AdminMenu.find()
-    res.send(Admin)
+    res.send({
+      code: 1,
+      data: {
+        menus: Admin,
+      },
+    })
+  })
+  // 获取普通用户菜单
+  router.get('/menu', async (req, res) => {
+    const menu = await Menu.find()
+    res.send({
+      code: 1,
+      data: {
+        menus: menu,
+      },
+    })
   })
 
   app.use('/api', router)
