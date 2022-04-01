@@ -188,12 +188,14 @@ module.exports = (app) => {
 
   // 获取单个用户信息
   router.get('/user/:id', authMeddleware, async (req, res) => {
-    const user = await Users.findById(req.params.id)
+    const user = await Users.findById(req.params.id).select('+password')
+    user.password = desDecrypt(user.password, KEY)
     res.send({
       code: 1,
       data: {
         _id: user._id,
         name: user.name,
+        user: user,
         message: '登录成功',
       },
     })
@@ -220,5 +222,201 @@ module.exports = (app) => {
     })
   })
 
+  // 获取用户列表、按要求查询、分页
+  router.post('/users/list', async (req, res) => {
+    const { offset, size, formData } = req.body
+    const skipNumber = (offset - 1) * size
+    if (formData) {
+      const totalCount = await Users.find({
+        name: { $regex: formData.name },
+        phone: { $regex: formData.phone },
+        email: { $regex: formData.email },
+      })
+      const userList = await Users.find({
+        name: { $regex: formData.name },
+        phone: { $regex: formData.phone },
+        email: { $regex: formData.email },
+      })
+        .skip(skipNumber)
+        .limit(size)
+      if (formData.roleId && !formData.createTime) {
+        const totalCount = await Users.find({
+          name: { $regex: formData.name },
+          phone: { $regex: formData.phone },
+          email: { $regex: formData.email },
+          roleId: formData.roleId,
+        })
+        const userList = await Users.find({
+          name: { $regex: formData.name },
+          phone: { $regex: formData.phone },
+          email: { $regex: formData.email },
+          roleId: formData.roleId,
+        })
+          .skip(skipNumber)
+          .limit(size)
+        return res.send({
+          code: 1,
+          data: {
+            list: userList,
+            totalCount: totalCount.length,
+          },
+        })
+      }
+      if (formData.createTime && !formData.roleId) {
+        const totalCount = await Users.find({
+          name: { $regex: formData.name },
+          phone: { $regex: formData.phone },
+          email: { $regex: formData.email },
+          createTimes: {
+            $gt: formData.createTime[0],
+            $lt: formData.createTime[1],
+          },
+        })
+        const userList = await Users.find({
+          name: { $regex: formData.name },
+          phone: { $regex: formData.phone },
+          email: { $regex: formData.email },
+          createTimes: {
+            $gt: formData.createTime[0],
+            $lt: formData.createTime[1],
+          },
+        })
+          .skip(skipNumber)
+          .limit(size)
+        return res.send({
+          code: 1,
+          data: {
+            list: userList,
+            totalCount: totalCount.length,
+          },
+        })
+      }
+      if (formData.roleId && formData.createTime) {
+        const totalCount = await Users.find({
+          name: { $regex: formData.name },
+          phone: { $regex: formData.phone },
+          email: { $regex: formData.email },
+          roleId: formData.roleId,
+          createTimes: {
+            $gt: formData.createTime[0],
+            $lt: formData.createTime[1],
+          },
+        })
+        const userList = await Users.find({
+          name: { $regex: formData.name },
+          phone: { $regex: formData.phone },
+          email: { $regex: formData.email },
+          roleId: formData.roleId,
+          createTimes: {
+            $gt: formData.createTime[0],
+            $lt: formData.createTime[1],
+          },
+        })
+          .skip(skipNumber)
+          .limit(size)
+        return res.send({
+          code: 1,
+          data: {
+            list: userList,
+            totalCount: totalCount.length,
+          },
+        })
+      }
+      return res.send({
+        code: 1,
+        data: {
+          list: userList,
+          totalCount: totalCount.length,
+        },
+      })
+    }
+    const userList = await Users.find({}).skip(skipNumber).limit(size)
+    const totalCount = await Users.find()
+    res.send({
+      code: 1,
+      data: {
+        list: userList,
+        totalCount: totalCount.length,
+      },
+    })
+  })
+
+  // 添加新用户
+  router.post('/addUser', async (req, res) => {
+    req.body.password = desEncrypt(req.body.password, KEY)
+    const name = await Users.findOne({ name: req.body.name })
+    if (name) {
+      return res.send({
+        code: -1,
+        data: {
+          message: '账号已存在',
+        },
+      })
+    }
+    const phone = await Users.findOne({ phone: req.body.phone })
+    if (phone) {
+      return res.send({
+        code: -1,
+        data: {
+          message: '手机号已存在',
+        },
+      })
+    }
+    const email = await Users.findOne({ email: req.body.email })
+    if (email) {
+      return res.send({
+        code: -1,
+        data: {
+          message: '邮箱已存在',
+        },
+      })
+    }
+
+    const result = await Users.create(req.body)
+    if (result)
+      res.send({
+        code: 1,
+        data: {
+          message: '添加成功',
+        },
+      })
+  })
+
+  // 编辑用户用户
+  router.patch('/patchUser/:id', async (req, res) => {
+    req.body.password = desEncrypt(req.body.password, KEY)
+    const result = await Users.findByIdAndUpdate(req.params.id, req.body)
+    if (result)
+      res.send({
+        code: 1,
+        data: {
+          message: '修改成功',
+        },
+      })
+  })
+  // 删除用户
+  router.delete('/deleteUser/:id', (req, res) => {
+    const deleteUserResult = Users.findByIdAndDelete(
+      req.params.id,
+      (err, docs) => {
+        if (err) {
+          return res.send({
+            code: -1,
+            data: {
+              message: '删除失败',
+            },
+          })
+        } else {
+          return res.send({
+            code: 1,
+            data: {
+              name: docs.name,
+              message: '删除成功',
+            },
+          })
+        }
+      }
+    )
+  })
   app.use('/api', router)
 }
