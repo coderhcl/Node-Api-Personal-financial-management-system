@@ -3,6 +3,7 @@ module.exports = (app) => {
   const Users = require('../models/Users')
   const Menu = require('../models/Menu')
   const AdminMenu = require('../models/AdminMenu')
+  const Category = require('../models/Category')
   const jwt = require('jsonwebtoken')
   const { desEncrypt, desDecrypt } = require('../plugins/des-crypto')
   const router = express.Router({
@@ -67,8 +68,6 @@ module.exports = (app) => {
       },
       app.get('secret')
     )
-    // console.log(user.name)
-    // console.log(user.roleId)
 
     res.send({
       code: 1,
@@ -86,6 +85,7 @@ module.exports = (app) => {
   router.post('/registration', async (req, res) => {
     // console.log(req.body.password)
     req.body.password = desEncrypt(req.body.password, KEY)
+    req.body.roleId = 2
     const name = await Users.findOne({ name: req.body.name })
     if (name) {
       return res.send({
@@ -119,7 +119,7 @@ module.exports = (app) => {
       res.send({
         code: 1,
         data: {
-          message: '登录成功',
+          message: '注册且登录成功',
         },
       })
   })
@@ -418,5 +418,162 @@ module.exports = (app) => {
       }
     )
   })
+
+  // 添加分类
+  router.post('/category', async (req, res) => {
+    // console.log(req.body)
+    const fundIt = await Category.findOne({ name: req.body.name })
+    if (fundIt) {
+      return res.send({
+        code: -1,
+        data: {
+          message: '分类已存在',
+        },
+      })
+    }
+    const result = await Category.create(req.body)
+    res.send({
+      code: 1,
+      data: {
+        message: '添加分类成功',
+      },
+    })
+  })
+  // 获取分类
+  router.get('/category', async (req, res) => {
+    const totalCount = await Category.find()
+    const data = await Category.find()
+    res.send({
+      code: 1,
+      data: {
+        categoryList: data,
+        totalCount: totalCount.length,
+      },
+    })
+  })
+  // 编辑分类
+  router.patch('/patchCategory/:id', async (req, res) => {
+    const name = await Category.findOne({ name: req.body.name })
+    if (name) {
+      return res.send({
+        code: -1,
+        data: {
+          message: '分类已存在',
+        },
+      })
+    }
+    const result = await Category.findByIdAndUpdate(req.params.id, req.body)
+    res.send({
+      code: 1,
+      data: {
+        message: '更改成功',
+      },
+    })
+  })
+  // 搜索，分页等功能
+  router.post('/category/list', async (req, res) => {
+    const { offset, size, formData } = req.body
+
+    const skipNumber = (offset - 1) * size
+    if (formData.name && formData.createTime) {
+      const totalCount = await Category.find({
+        name: { $regex: formData.name },
+        createTimes: {
+          $gt: formData.createTime[0],
+          $lt: formData.createTime[1],
+        },
+      })
+      const userList = await Category.find({
+        name: { $regex: formData.name },
+        createTimes: {
+          $gt: formData.createTime[0],
+          $lt: formData.createTime[1],
+        },
+      })
+        .skip(skipNumber)
+        .limit(size)
+      return res.send({
+        code: 1,
+        data: {
+          list: userList,
+          totalCount: totalCount.length,
+        },
+      })
+    }
+    if (formData.name && !formData.createTime) {
+      const totalCount = await Category.find({
+        name: { $regex: formData.name },
+      })
+      const userList = await Category.find({
+        name: { $regex: formData.name },
+      })
+        .skip(skipNumber)
+        .limit(size)
+      return res.send({
+        code: 1,
+        data: {
+          list: userList,
+          totalCount: totalCount.length,
+        },
+      })
+    }
+    if (formData.createTime && !formData.name) {
+      const totalCount = await Category.find({
+        createTimes: {
+          $gt: formData.createTime[0],
+          $lt: formData.createTime[1],
+        },
+      })
+      const userList = await Category.find({
+        createTimes: {
+          $gt: formData.createTime[0],
+          $lt: formData.createTime[1],
+        },
+      })
+        .skip(skipNumber)
+        .limit(size)
+      return res.send({
+        code: 1,
+        data: {
+          list: userList,
+          totalCount: totalCount.length,
+        },
+      })
+    }
+    const userList = await Category.find({}).skip(skipNumber).limit(size)
+    const totalCount = await Category.find()
+    res.send({
+      code: 1,
+      data: {
+        list: userList,
+        totalCount: totalCount.length,
+      },
+    })
+  })
+  // 删除分类
+  router.delete('/deleteCategory/:id', (req, res) => {
+    const deleteUserResult = Category.findByIdAndDelete(
+      req.params.id,
+      (err, docs) => {
+        if (err) {
+          return res.send({
+            code: -1,
+            data: {
+              message: '删除失败',
+            },
+          })
+        } else {
+          return res.send({
+            code: 1,
+            data: {
+              name: docs.name,
+              message: '删除成功',
+            },
+          })
+        }
+      }
+    )
+  })
+
   app.use('/api', router)
 }
