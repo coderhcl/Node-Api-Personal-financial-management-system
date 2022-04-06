@@ -1061,8 +1061,8 @@ module.exports = (app) => {
   // ############公告################
   // 添加公告
   router.post('/notice', async (req, res) => {
-    console.log(req.body)
-    const fundIt = await Notice.findOne({ title: req.body.title })
+    // console.log(req.body)
+    const fundIt = await Notice.findOne({ name: req.body.name })
     console.log(fundIt)
     if (fundIt) {
       return res.send({

@@ -7,7 +7,7 @@ const schema = new mongoose.Schema({
   },
   phone: { type: 'String' },
   email: { type: 'String' },
-  createTime: {
+  createTimes: {
     type: Date,
     default: Date.now,
   },

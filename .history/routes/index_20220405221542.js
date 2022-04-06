@@ -1062,7 +1062,7 @@ module.exports = (app) => {
   // 添加公告
   router.post('/notice', async (req, res) => {
     console.log(req.body)
-    const fundIt = await Notice.findOne({ title: req.body.title })
+    const fundIt = await Notice.findOne({ title: req.body.name })
     console.log(fundIt)
     if (fundIt) {
       return res.send({

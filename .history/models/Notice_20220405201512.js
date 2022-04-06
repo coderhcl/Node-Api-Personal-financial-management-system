@@ -1,13 +1,8 @@
 const mongoose = require('mongoose')
 const schema = new mongoose.Schema({
-  name: { type: 'String' },
-  password: {
-    type: 'String',
-    select: false,
-  },
-  phone: { type: 'String' },
-  email: { type: 'String' },
-  createTime: {
+  title: { type: 'String' },
+ content:{type:"String"},
+  createTimes: {
     type: Date,
     default: Date.now,
   },

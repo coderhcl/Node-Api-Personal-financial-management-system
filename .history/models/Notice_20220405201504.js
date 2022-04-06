@@ -1,7 +1,8 @@
 const mongoose = require('mongoose')
 const schema = new mongoose.Schema({
-  name: { type: 'String' },
-  createTime: {
+  title: { type: 'String' },
+ content:{type:""}
+  createTimes: {
     type: Date,
     default: Date.now,
   },
@@ -9,6 +10,7 @@ const schema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
+  roleId: { type: 'Number', default: 2 },
 })
 
-module.exports = mongoose.model('Category', schema)
+module.exports = mongoose.model('Users', schema)

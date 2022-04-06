@@ -1058,12 +1058,11 @@ module.exports = (app) => {
     )
   })
 
-  // ############公告################
+// ############公告################
   // 添加公告
-  router.post('/notice', async (req, res) => {
-    console.log(req.body)
-    const fundIt = await Notice.findOne({ title: req.body.title })
-    console.log(fundIt)
+  router.post('/notice/category', async (req, res) => {
+    // console.log(req.body)
+    const fundIt = await Notice.findOne({ name: req.body.name })
     if (fundIt) {
       return res.send({
         code: -1,
@@ -1081,7 +1080,7 @@ module.exports = (app) => {
     })
   })
   // 获取债务分类
-  router.get('/notice', async (req, res) => {
+  router.get('/notice/category', async (req, res) => {
     const totalCount = await Notice.find()
     const data = await Notice.find()
     res.send({
@@ -1093,9 +1092,9 @@ module.exports = (app) => {
     })
   })
   // 编辑投资分类
-  router.patch('/notice/patch/:id', async (req, res) => {
-    const title = await Notice.findOne({ title: req.body.title })
-    if (title) {
+  router.patch('/notice/patchCategory/:id', async (req, res) => {
+    const name = await Notice.findOne({ name: req.body.name })
+    if (name) {
       return res.send({
         code: -1,
         data: {
@@ -1112,7 +1111,7 @@ module.exports = (app) => {
     })
   })
   // 债务搜索，分页等功能
-  router.post('/notice/list', async (req, res) => {
+  router.post('/notice/category/list', async (req, res) => {
     const { offset, size, formData } = req.body
     const skipNumber = (offset - 1) * size
     if (formData.name && formData.createTime) {
@@ -1164,7 +1163,7 @@ module.exports = (app) => {
           $lt: formData.createTime[1],
         },
       })
-      const userList = await Notice.find({
+      const userList = await DebtCategory.find({
         createTimes: {
           $gt: formData.createTime[0],
           $lt: formData.createTime[1],
@@ -1180,8 +1179,8 @@ module.exports = (app) => {
         },
       })
     }
-    const userList = await Notice.find({}).skip(skipNumber).limit(size)
-    const totalCount = await Notice.find()
+    const userList = await DebtCategory.find({}).skip(skipNumber).limit(size)
+    const totalCount = await DebtCategory.find()
     res.send({
       code: 1,
       data: {
@@ -1191,8 +1190,8 @@ module.exports = (app) => {
     })
   })
   // 删除债务分类
-  router.delete('/notice/delete/:id', (req, res) => {
-    const deleteUserResult = Notice.findByIdAndDelete(
+  router.delete('/debt/deleteCategory/:id', (req, res) => {
+    const deleteUserResult = DebtCategory.findByIdAndDelete(
       req.params.id,
       (err, docs) => {
         if (err) {

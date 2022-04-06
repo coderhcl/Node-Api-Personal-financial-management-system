@@ -1061,9 +1061,8 @@ module.exports = (app) => {
   // ############公告################
   // 添加公告
   router.post('/notice', async (req, res) => {
-    console.log(req.body)
-    const fundIt = await Notice.findOne({ title: req.body.title })
-    console.log(fundIt)
+    // console.log(req.body)
+    const fundIt = await Notice.findOne({ name: req.body.name })
     if (fundIt) {
       return res.send({
         code: -1,
@@ -1094,8 +1093,8 @@ module.exports = (app) => {
   })
   // 编辑投资分类
   router.patch('/notice/patch/:id', async (req, res) => {
-    const title = await Notice.findOne({ title: req.body.title })
-    if (title) {
+    const name = await Notice.findOne({ name: req.body.name })
+    if (name) {
       return res.send({
         code: -1,
         data: {
