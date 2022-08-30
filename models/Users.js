@@ -7,15 +7,18 @@ const schema = new mongoose.Schema({
   },
   phone: { type: 'String' },
   email: { type: 'String' },
+  roleId: { type: 'Number', default: 2 },
+  sign: { type: 'Number', default: 0 },
+  icon: { type: 'String' },
+
+  // income: { type: mongoose.SchemaTypes.ObjectId, ref: 'Income' },
   createTime: {
     type: Date,
-    default: Date.now,
   },
   updateTime: {
     type: Date,
     default: Date.now,
   },
-  roleId: { type: 'Number', default: 2 },
 })
 
 module.exports = mongoose.model('Users', schema)
